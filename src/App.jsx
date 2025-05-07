@@ -13,6 +13,7 @@ import JobSeekerRegister from './pages/auth/JobSeekerRegister';
 import EmployerRegister from './pages/auth/EmployerRegister';
 import Login from './pages/auth/Login';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import CandidateProfile from './pages/profile/CandidateProfile';
 
 // Components
 import getIcon from './utils/iconUtils';
@@ -64,6 +65,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<ProtectedRoute><Home /></ProtectedRoute>} />
             
+            <Route path="/profile" element={<ProtectedRoute><CandidateProfile /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>

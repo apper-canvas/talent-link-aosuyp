@@ -56,6 +56,7 @@ export const registerUser = createAsyncThunk(
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        photo: user.photo || null,
         userType: user.userType
       }));
 
@@ -86,6 +87,7 @@ export const loginUser = createAsyncThunk(
           password: await hashPassword('Password123!'),
           firstName: 'John',
           lastName: 'Doe',
+          photo: null,
           userType: 'jobSeeker'
         }
       ];
@@ -115,6 +117,7 @@ export const loginUser = createAsyncThunk(
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        photo: user.photo,
         userType: user.userType
       }));
       
@@ -124,6 +127,7 @@ export const loginUser = createAsyncThunk(
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          photo: user.photo,
           userType: user.userType
         },
         token 
@@ -161,6 +165,14 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
     },
+    updateUserProfile: (state, action) => {
+      state.user = { ...state.user, ...action.payload };
+      
+      // Update localStorage
+      if (state.user) {
+        localStorage.setItem('userData', JSON.stringify(state.user));
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -196,5 +208,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUserType, logout } = authSlice.actions;
+export const { setUserType, logout, updateUserProfile } = authSlice.actions;
 export default authSlice.reducer;
