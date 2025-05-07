@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import getIcon from '../../utils/iconUtils';
-import { uploadResume, deleteResume, setDefaultResume } from '../../store/slices/profileSlice';
+import { uploadResume, deleteResume, setDefaultResume, replaceResume } from '../../store/slices/profileSlice';
 import { validateResumeFile } from '../../utils/fileUtils';
 
 const UploadIcon = getIcon('Upload');
@@ -15,7 +15,9 @@ const CheckCircleIcon = getIcon('CheckCircle');
 const FileWordIcon = getIcon('FileText'); // We'll use FileText for Word docs too
 const StarIcon = getIcon('Star');
 const ExternalLinkIcon = getIcon('ExternalLink');
+const RefreshCwIcon = getIcon('RefreshCw');
 const AlertCircleIcon = getIcon('AlertCircle');
+
 
 const ResumeUploader = () => {
   const dispatch = useDispatch();
@@ -26,7 +28,9 @@ const ResumeUploader = () => {
   const [dragActive, setDragActive] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [resumeTitle, setResumeTitle] = useState('');
+  const [selectedResumeForReplace, setSelectedResumeForReplace] = useState(null);
   const [isDefault, setIsDefault] = useState(false);
+  const [isReplacing, setIsReplacing] = useState(false);
   
   // Handle file select
   const handleFileChange = (e) => {
@@ -122,6 +126,29 @@ const ResumeUploader = () => {
         toast.error(error || 'Failed to upload resume');
       });
   };
+
+  // Handle replace resume submission
+  const handleReplaceSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!uploadedFile) {
+      toast.error('Please select a file to upload');
+      return;
+    }
+    
+    dispatch(replaceResume({
+      resumeId: selectedResumeForReplace.id,
+      file: uploadedFile
+    }))
+      .unwrap()
+      .then(() => {
+        toast.success('Resume replaced successfully');
+        setUploadedFile(null);
+        setSelectedResumeForReplace(null);
+        setIsReplacing(false);
+      })
+      .catch((error) => toast.error(error || 'Failed to replace resume'));
+  };
   
   // Format file size for display
   const formatFileSize = (bytes) => {
@@ -182,6 +209,25 @@ const ResumeUploader = () => {
     toast.info(`Opening ${resume.title}... In a real app, this would open the actual file.`);
   };
   
+  // Handle replace resume
+  const handleReplaceClick = (resume) => {
+    setSelectedResumeForReplace(resume);
+    setIsReplacing(true);
+    // Reset file input if we have a ref to it
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    setUploadedFile(null);
+  };
+  
+  // Cancel replacing resume
+  const cancelReplace = () => {
+    setSelectedResumeForReplace(null);
+    setIsReplacing(false);
+    setUploadedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+  
   return (
     <div>
       {/* Upload Area */}
@@ -221,7 +267,7 @@ const ResumeUploader = () => {
       </div>
       
       {/* File Details (if a file is selected) */}
-      {uploadedFile && (
+      {uploadedFile && !isReplacing && (
         <div className="bg-surface-100 dark:bg-surface-800 rounded-lg p-4 mb-6">
           <div className="flex items-start">
             <div className="bg-white dark:bg-surface-700 p-2 rounded-lg shadow-sm mr-4">
@@ -279,6 +325,56 @@ const ResumeUploader = () => {
         </div>
       )}
       
+      {/* Replace Resume Form */}
+      {isReplacing && uploadedFile && (
+        <div className="bg-surface-100 dark:bg-surface-800 rounded-lg p-4 mb-6 border-l-4 border-secondary">
+          <div className="flex items-start">
+            <div className="bg-white dark:bg-surface-700 p-2 rounded-lg shadow-sm mr-4">
+              <RefreshCwIcon size={24} className="text-secondary" />
+            </div>
+            <div className="flex-1">
+              <h4 className="font-medium">{uploadedFile.name}</h4>
+              <p className="text-sm text-surface-500">
+                {formatFileSize(uploadedFile.size)} • {uploadedFile.type.split('/')[1].toUpperCase()}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setUploadedFile(null)}
+              className="text-red-500 hover:text-red-700"
+            >
+              <TrashIcon size={18} />
+            </button>
+          </div>
+          
+          <div className="mt-4">
+            <form onSubmit={handleReplaceSubmit}>
+              <div className="mb-5">
+                <h4 className="font-medium mb-2">Replacing Resume:</h4>
+                <div className="bg-white dark:bg-surface-700 rounded-lg p-3 border border-surface-200 dark:border-surface-600">
+                  <p className="font-medium">{selectedResumeForReplace?.title}</p>
+                  <p className="text-sm text-surface-500 mt-1">
+                    Original file: {selectedResumeForReplace?.file}
+                  </p>
+                </div>
+              </div>              
+              <div className="flex space-x-3">
+                <button
+                  type="button"
+                  onClick={cancelReplace}
+                  className="px-4 py-2 rounded-lg bg-surface-200 dark:bg-surface-700 hover:bg-surface-300"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-secondary" disabled={loading}
+              >
+                {loading ? 'Uploading...' : 'Upload Resume'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+      
       {/* Existing Resumes */}
       <div className="mt-8">
         <h3 className="text-lg font-medium mb-4">Your Resumes</h3>
@@ -328,6 +424,15 @@ const ResumeUploader = () => {
                     </div>
                     
                     <div className="flex space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => handleReplaceClick(resume)}
+                        className="text-secondary hover:text-secondary-dark p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700"
+                        title="Replace Resume"
+                      >
+                        <RefreshCwIcon size={18} />
+                      </button>
+                      
                       <button
                         type="button"
                         onClick={() => handleViewResume(resume)}
@@ -394,7 +499,6 @@ const ResumeUploader = () => {
                           </div>
                         </motion.div>
                       )}
-                      </button>
                     </div>
                   </motion.div>
                 );

@@ -152,6 +152,39 @@ export const setDefaultResume = createAsyncThunk(
   }
 );
 
+// Async thunk for replacing a resume file
+export const replaceResume = createAsyncThunk(
+  'profile/replaceResume',
+  async ({ resumeId, file }, { rejectWithValue, getState }) => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // In a real app, this would be an API request to replace file
+      const currentResumes = getState().profile.resumes || [];
+      const resumeIndex = currentResumes.findIndex(r => r.id === resumeId);
+      
+      if (resumeIndex === -1) {
+        return rejectWithValue('Resume not found');
+      }
+      
+      const updatedResumes = [...currentResumes];
+      updatedResumes[resumeIndex] = {
+        ...updatedResumes[resumeIndex],
+        file: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        date: new Date().toISOString() // Update the date to reflect the replacement
+      };
+      
+      saveResumesState(updatedResumes);
+      return updatedResumes;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to replace resume');
+    }
+  }
+);
+
 // Get loaded profile or create an empty one
 const loadedProfile = loadProfileState() || {
   // Basic info
@@ -241,6 +274,15 @@ const profileSlice = createSlice({
       // Set default resume
       .addCase(setDefaultResume.fulfilled, (state, action) => {
         state.resumes = action.payload;
+      })
+      
+      // Replace resume
+      .addCase(replaceResume.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(replaceResume.fulfilled, (state, action) => {
+        state.resumes = action.payload;
+        state.loading = false;
       });
   }
 });
