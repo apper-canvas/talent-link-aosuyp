@@ -11,6 +11,8 @@ import NotFound from './pages/NotFound';
 import Register from './pages/auth/Register';
 import JobSeekerRegister from './pages/auth/JobSeekerRegister';
 import EmployerRegister from './pages/auth/EmployerRegister';
+import Login from './pages/auth/Login';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 // Components
 import getIcon from './utils/iconUtils';
@@ -59,6 +61,8 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/register/job-seeker" element={<JobSeekerRegister />} />
             <Route path="/register/employer" element={<EmployerRegister />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={<ProtectedRoute><Home /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

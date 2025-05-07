@@ -8,6 +8,8 @@ import AuthLayout from '../../components/auth/AuthLayout';
 import AuthHeader from '../../components/auth/AuthHeader';
 import FormInput from '../../components/FormInput';
 import getIcon from '../../utils/iconUtils';
+import { validatePassword } from '../../utils/passwordUtils';
+import PasswordStrengthMeter from '../../components/auth/PasswordStrengthMeter';
 
 const JobSeekerRegister = () => {
   const navigate = useNavigate();
@@ -24,6 +26,7 @@ const JobSeekerRegister = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: '' });
 
   useEffect(() => {
     // If no user type is selected, redirect to register page
@@ -35,6 +38,13 @@ const JobSeekerRegister = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+
+    // Update password strength when password changes
+    if (name === 'password') {
+      const strength = validatePassword(value);
+      setPasswordStrength({ score: strength.score, feedback: strength.message });
+    }
+
     
     // Clear the error for this field when user starts typing
     if (errors[name]) {
@@ -60,8 +70,9 @@ const JobSeekerRegister = () => {
     // Validate password
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+    } else {
+      const validationResult = validatePassword(formData.password);
+      if (!validationResult.isValid) newErrors.password = validationResult.message;
     }
     
     // Validate confirm password
@@ -173,6 +184,7 @@ const JobSeekerRegister = () => {
 
         <FormInput
           label="Password"
+          description="Must be at least 8 characters with uppercase, lowercase, number, and special character"
           type="password"
           name="password"
           value={formData.password}
@@ -183,6 +195,7 @@ const JobSeekerRegister = () => {
           icon="Lock"
           autoComplete="new-password"
         />
+        <PasswordStrengthMeter score={passwordStrength.score} feedback={passwordStrength.feedback} />
 
         <FormInput
           label="Confirm Password"
