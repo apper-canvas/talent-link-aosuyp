@@ -373,7 +373,6 @@ const ResumeUploader = () => {
             </form>
           </div>
         </div>
-        </div>
       )}
       
       {/* Existing Resumes */}
