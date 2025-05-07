@@ -370,9 +370,9 @@ const ResumeUploader = () => {
               >
                 {loading ? 'Uploading...' : 'Upload Resume'}
               </button>
-            </form>
+              </form>
+            </div>
           </div>
-        </div>
       )}
       
       {/* Existing Resumes */}
