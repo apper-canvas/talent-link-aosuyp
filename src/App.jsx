@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { motion } from 'framer-motion';
 
 // Pages
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
+
+// Auth Pages
+import Register from './pages/auth/Register';
+import JobSeekerRegister from './pages/auth/JobSeekerRegister';
+import EmployerRegister from './pages/auth/EmployerRegister';
 
 // Components
 import getIcon from './utils/iconUtils';
@@ -49,6 +54,12 @@ function App() {
         <main>
           <Routes>
             <Route path="/" element={<Home />} />
+            
+            {/* Authentication Routes */}
+            <Route path="/register" element={<Register />} />
+            <Route path="/register/job-seeker" element={<JobSeekerRegister />} />
+            <Route path="/register/employer" element={<EmployerRegister />} />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
