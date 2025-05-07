@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import getIcon from '../../utils/iconUtils';
-import { uploadResume } from '../../store/slices/profileSlice';
+import { uploadResume, deleteResume, setDefaultResume } from '../../store/slices/profileSlice';
 import { validateResumeFile } from '../../utils/fileUtils';
 
 const UploadIcon = getIcon('Upload');
@@ -13,11 +13,15 @@ const FilePdfIcon = getIcon('FilePdf');
 const TrashIcon = getIcon('Trash');
 const CheckCircleIcon = getIcon('CheckCircle');
 const FileWordIcon = getIcon('FileText'); // We'll use FileText for Word docs too
+const StarIcon = getIcon('Star');
+const ExternalLinkIcon = getIcon('ExternalLink');
+const AlertCircleIcon = getIcon('AlertCircle');
 
 const ResumeUploader = () => {
   const dispatch = useDispatch();
   const { resumes, loading } = useSelector(state => state.profile);
   
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const fileInputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -144,6 +148,40 @@ const ResumeUploader = () => {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
   
+  // Handle delete resume
+  const handleDeleteClick = (resumeId) => {
+    setShowDeleteConfirm(resumeId);
+  };
+  
+  const confirmDelete = (resumeId) => {
+    dispatch(deleteResume(resumeId))
+      .unwrap()
+      .then(() => {
+        toast.success('Resume deleted successfully');
+        setShowDeleteConfirm(null);
+      })
+      .catch((error) => {
+        toast.error(error || 'Failed to delete resume');
+      });
+  };
+  
+  // Handle setting a resume as default
+  const handleSetDefault = (resumeId) => {
+    dispatch(setDefaultResume(resumeId))
+      .unwrap()
+      .then(() => {
+        toast.success('Default resume updated');
+      })
+      .catch((error) => {
+        toast.error(error || 'Failed to update default resume');
+      });
+  };
+  
+  // View resume (in real app would open the stored file URL)
+  const handleViewResume = (resume) => {
+    toast.info(`Opening ${resume.title}... In a real app, this would open the actual file.`);
+  };
+  
   return (
     <div>
       {/* Upload Area */}
@@ -262,7 +300,7 @@ const ResumeUploader = () => {
                   <motion.div
                     key={resume.id}
                     initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    animate={{ opacity: 1, y: 0, transition: { duration: 0.3 } }}
                     exit={{ opacity: 0, height: 0 }}
                     className={`flex items-center p-4 rounded-lg border ${
                       resume.isDefault
@@ -290,11 +328,72 @@ const ResumeUploader = () => {
                     </div>
                     
                     <div className="flex space-x-2">
-                      <button type="button" className="text-primary hover:text-primary-dark">
-                        <FileIcon size={18} />
+                      <button
+                        type="button"
+                        onClick={() => handleViewResume(resume)}
+                        className="text-primary hover:text-primary-dark p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700"
+                        title="View Resume"
+                      >
+                        <ExternalLinkIcon size={18} />
                       </button>
-                      <button type="button" className="text-red-500 hover:text-red-700">
+                      
+                      {!resume.isDefault && (
+                        <button
+                          type="button"
+                          onClick={() => handleSetDefault(resume.id)}
+                          className="text-secondary hover:text-secondary-dark p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700"
+                          title="Set as Default"
+                        >
+                          <StarIcon size={18} />
+                        </button>
+                      )}
+                      
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteClick(resume.id)}
+                        className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700"
+                        title="Delete Resume"
+                      >
                         <TrashIcon size={18} />
+                      </button>
+                      
+                      {/* Delete Confirmation */}
+                      {showDeleteConfirm === resume.id && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+                        >
+                          <div className="bg-white dark:bg-surface-800 rounded-lg shadow-xl max-w-md w-full p-6">
+                            <div className="flex items-center text-red-500 mb-4">
+                              <AlertCircleIcon size={24} className="mr-2" />
+                              <h4 className="text-lg font-semibold">Delete Resume</h4>
+                            </div>
+                            
+                            <p className="mb-6">
+                              Are you sure you want to delete <span className="font-medium">{resume.title}</span>? 
+                              This action cannot be undone.
+                            </p>
+                            
+                            <div className="flex justify-end space-x-3">
+                              <button
+                                type="button"
+                                onClick={() => setShowDeleteConfirm(null)}
+                                className="px-4 py-2 rounded-lg bg-surface-200 dark:bg-surface-700 hover:bg-surface-300"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => confirmDelete(resume.id)}
+                                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
                       </button>
                     </div>
                   </motion.div>

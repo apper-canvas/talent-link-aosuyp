@@ -60,15 +60,17 @@ export const validateResumeFile = (file, maxSize = 10 * 1024 * 1024) => {
   }
 
   // Check file type
-  const validDocTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-  if (!validDocTypes.includes(file.type)) {
-    return { isValid: false, message: 'Invalid file type. Please select a PDF or Word document.' };
+  const validDocTypes = [
+    'application/pdf', 
+    'application/msword', 
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ];
+  const fileExtension = file.name.split('.').pop().toLowerCase();
+  const validExtensions = ['pdf', 'doc', 'docx'];
+  
+  if (!validDocTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
+    return { isValid: false, message: 'Invalid file type. Please select a PDF (.pdf) or Word (.doc, .docx) document.' };
   }
-
-  // Check file size
-  if (file.size > maxSize) {
-    return { isValid: false, message: `File is too large. Maximum size is ${maxSize / (1024 * 1024)}MB.` };
-  }
-
+  
   return { isValid: true };
 };

@@ -99,6 +99,59 @@ export const uploadResume = createAsyncThunk(
   }
 );
 
+// Async thunk for deleting resume
+export const deleteResume = createAsyncThunk(
+  'profile/deleteResume',
+  async (resumeId, { rejectWithValue, getState }) => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // In a real app, this would be an API request to delete file
+      const currentResumes = getState().profile.resumes || [];
+      const resumeToDelete = currentResumes.find(r => r.id === resumeId);
+      
+      if (!resumeToDelete) {
+        return rejectWithValue('Resume not found');
+      }
+      
+      const updatedResumes = currentResumes.filter(resume => resume.id !== resumeId);
+      
+      // If we deleted the default resume and have other resumes, set a new default
+      if (resumeToDelete.isDefault && updatedResumes.length > 0) {
+        updatedResumes[0].isDefault = true;
+      }
+      
+      saveResumesState(updatedResumes);
+      return updatedResumes;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to delete resume');
+    }
+  }
+);
+
+// Async thunk for setting a resume as default
+export const setDefaultResume = createAsyncThunk(
+  'profile/setDefaultResume',
+  async (resumeId, { rejectWithValue, getState }) => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 600));
+      
+      const currentResumes = getState().profile.resumes || [];
+      const updatedResumes = currentResumes.map(resume => ({
+        ...resume,
+        isDefault: resume.id === resumeId
+      }));
+      
+      saveResumesState(updatedResumes);
+      return updatedResumes;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to set default resume');
+    }
+  }
+);
+
 // Get loaded profile or create an empty one
 const loadedProfile = loadProfileState() || {
   // Basic info
@@ -170,6 +223,24 @@ const profileSlice = createSlice({
       .addCase(uploadResume.rejected, (state, action) => {
         state.error = action.payload;
         state.loading = false;
+      })
+      
+      // Delete resume
+      .addCase(deleteResume.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(deleteResume.fulfilled, (state, action) => {
+        state.resumes = action.payload;
+        state.loading = false;
+      })
+      .addCase(deleteResume.rejected, (state, action) => {
+        state.error = action.payload;
+        state.loading = false;
+      })
+      
+      // Set default resume
+      .addCase(setDefaultResume.fulfilled, (state, action) => {
+        state.resumes = action.payload;
       });
   }
 });
