@@ -366,13 +366,12 @@ const ResumeUploader = () => {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn-secondary" disabled={loading}
-              >
-                {loading ? 'Uploading...' : 'Upload Resume'}
-              </button>
-              </form>
+                <button type="submit" className="btn-secondary" disabled={loading}>
+                  {loading ? 'Uploading...' : 'Upload Resume'}
+                </button>
+              </div>
+            </form>
             </div>
-          </div>
       )}
       
       {/* Existing Resumes */}
